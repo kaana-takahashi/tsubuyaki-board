@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${tagName != null} ? |#${tagName} - 社内つぶやきボード| : '投稿一覧 - 社内つぶやきボード'">投稿一覧 - 社内つぶやきボード</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/post-menu.js}" defer></script>
 </head>
-<body>
+<body class="miyazaki-shell">
 <main>
     <h1 th:text="${tagName != null} ? |#${tagName}| : '社内つぶやきボード'">社内つぶやきボード</h1>
     <nav>
@@ -35,6 +36,22 @@
             <a class="post__detail-link"
                th:href="@{/posts/{id}(id=${post.id})}"
                th:attr="aria-label=|${post.author} の投稿詳細を表示|"></a>
+            <div class="post__actions">
+                <button class="post__menu-button"
+                        type="button"
+                        aria-label="投稿メニューを開く"
+                        aria-haspopup="true"
+                        aria-expanded="false">...</button>
+                <div class="post__menu" hidden>
+                    <form class="post__delete-form" th:action="@{/posts/{id}/delete(id=${post.id})}" method="post">
+                        <input th:if="${_csrf != null}"
+                               type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+                        <button class="post__delete-button" type="submit">削除</button>
+                    </form>
+                </div>
+            </div>
             <div class="post__author">
                 <span class="post__avatar" th:style="'background-color: ' + ${post.avatarColor}" th:text="${#strings.toUpperCase(#strings.substring(post.author, 0, 1))}">A</span>
                 <span class="post__author-name" th:text="${post.author}">投稿者</span>

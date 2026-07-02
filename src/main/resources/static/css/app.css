@@ -1,10 +1,16 @@
-/* 最小スタイル — 受講生が必要に応じて拡張する */
+/* 宮崎県の海・日向夏・フェニックスを意識した共通レイアウト */
 :root {
-    --color-bg: #fafafa;
-    --color-text: #222;
-    --color-accent: #1d4ed8;
-    --color-border: #e5e7eb;
-    --color-muted: #6b7280;
+    --color-bg: #f2faf7;
+    --color-surface: #fffdf6;
+    --color-text: #17352f;
+    --color-accent: #007c91;
+    --color-accent-strong: #006455;
+    --color-sun: #f8b83f;
+    --color-citrus: #ffe16a;
+    --color-border: #bddfd7;
+    --color-muted: #5f746f;
+    --shadow-card: 0 12px 26px rgb(23 53 47 / 12%);
+    --shadow-hover: 0 16px 34px rgb(0 124 145 / 18%);
 }
 
 * {
@@ -12,23 +18,135 @@
 }
 
 body {
+    position: relative;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
                  "Noto Sans CJK JP", "Yu Gothic UI", sans-serif;
-    background: var(--color-bg);
+    background:
+        linear-gradient(180deg, rgb(0 124 145 / 14%) 0, rgb(0 124 145 / 0%) 18rem),
+        repeating-linear-gradient(135deg, rgb(47 127 87 / 9%) 0 1px, transparent 1px 22px),
+        linear-gradient(180deg, #f7fffb 0, var(--color-bg) 100%);
     color: var(--color-text);
     line-height: 1.6;
 }
 
+body::before {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 0.55rem;
+    background: linear-gradient(90deg, var(--color-accent) 0 34%, var(--color-sun) 34% 58%, var(--color-accent-strong) 58% 100%);
+    content: "";
+}
+
+body::after {
+    position: fixed;
+    z-index: -1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 5rem;
+    background:
+        linear-gradient(180deg, transparent 0, rgb(0 124 145 / 10%) 100%),
+        repeating-linear-gradient(90deg, rgb(0 124 145 / 18%) 0 5rem, rgb(248 184 63 / 16%) 5rem 8rem);
+    content: "";
+}
+
 main {
-    max-width: 720px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    width: min(100% - 2rem, 880px);
+    margin: 2.5rem auto;
+    padding: 0;
 }
 
 h1 {
-    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--color-citrus);
+    color: #123c36;
+    font-size: clamp(1.45rem, 1.7rem, 1.8rem);
+    line-height: 1.25;
+}
+
+h1::before {
+    display: inline-block;
+    width: 0.65rem;
+    height: 1.4rem;
+    margin-right: 0.55rem;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, var(--color-sun), var(--color-accent-strong));
+    content: "";
+    vertical-align: -0.2rem;
+}
+
+main > nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
     margin-bottom: 1rem;
+    color: var(--color-muted);
+}
+
+a {
+    color: var(--color-accent);
+    font-weight: 600;
+    text-underline-offset: 0.18em;
+}
+
+a:hover {
+    color: var(--color-accent-strong);
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+button {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+button:hover,
+button:focus-visible {
+    background: var(--color-accent-strong);
+}
+
+input,
+textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: white;
+    color: var(--color-text);
+}
+
+input:focus-visible,
+textarea:focus-visible {
+    border-color: var(--color-accent);
+    outline: 3px solid rgb(0 124 145 / 18%);
+}
+
+label {
+    display: inline-block;
+    margin-bottom: 0.3rem;
+    color: #254941;
+    font-weight: 700;
+}
+
+form > div {
+    margin-bottom: 1rem;
+}
+
+form > button[type="submit"] {
+    padding: 0.55rem 1.1rem;
 }
 
 .refresh-form {
@@ -60,14 +178,12 @@ h1 {
 .search-form input {
     flex: 1;
     min-width: 0;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    font: inherit;
+    padding: 0.55rem 0.7rem;
 }
 
 .search-form button {
-    padding: 0.4rem 0.8rem;
+    flex: 0 0 auto;
+    padding: 0.55rem 0.95rem;
 }
 
 .error {
@@ -78,20 +194,24 @@ h1 {
 
 .post {
     position: relative;
-    padding: 1rem;
+    padding: 1.05rem;
     border: 1px solid var(--color-border);
+    border-left: 5px solid var(--color-accent);
     border-radius: 8px;
-    margin-bottom: 0.75rem;
-    background: white;
+    margin-bottom: 0.85rem;
+    background: var(--color-surface);
+    box-shadow: 0 2px 0 rgb(248 184 63 / 24%);
 }
 
 .post--linkable {
     cursor: pointer;
-    transition: box-shadow 0.15s ease;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .post--linkable:hover {
-    box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
 }
 
 .post__detail-link {
@@ -102,8 +222,78 @@ h1 {
 }
 
 .post__detail-link:focus-visible {
-    outline: 3px solid rgb(29 78 216 / 35%);
+    outline: 3px solid rgb(248 184 63 / 55%);
     outline-offset: 2px;
+}
+
+.post__actions {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 3;
+}
+
+.post__menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 88%);
+    color: var(--color-muted);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.post__menu-button:hover,
+.post__menu-button:focus-visible {
+    background: #dceee9;
+    color: var(--color-text);
+}
+
+.post__menu-button:active {
+    background: #bfd6d0;
+}
+
+.post__menu {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    min-width: 7rem;
+    padding: 0.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+}
+
+.post__menu[hidden] {
+    display: none;
+}
+
+.post__delete-form {
+    margin: 0;
+}
+
+.post__delete-button {
+    width: 100%;
+    padding: 0.35rem 0.75rem;
+    border: 0;
+    border-radius: 6px;
+    background: white;
+    color: #b91c1c;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.post__delete-button:hover,
+.post__delete-button:focus-visible {
+    background: #fee2e2;
 }
 
 .post__author {
@@ -111,6 +301,7 @@ h1 {
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
+    padding-right: 2.4rem;
 }
 
 .post__avatar {
@@ -121,6 +312,7 @@ h1 {
     width: 28px;
     height: 28px;
     border-radius: 50%;
+    border: 2px solid rgb(255 255 255 / 85%);
     color: white;
     font-size: 0.8rem;
     font-weight: 700;
@@ -157,13 +349,20 @@ h1 {
 }
 
 .post__tags a {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid rgb(0 124 145 / 18%);
+    border-radius: 9999px;
+    background: rgb(0 124 145 / 8%);
     color: var(--color-accent);
     font-size: 0.9rem;
     text-decoration: none;
 }
 
 .post__tags a:hover {
-    text-decoration: underline;
+    background: rgb(255 225 106 / 42%);
+    color: var(--color-accent-strong);
 }
 
 .post__meta {
@@ -183,7 +382,7 @@ h1 {
     align-items: center;
     gap: 0.35rem;
     padding: 0.25rem 0.85rem;
-    border: 1px solid #e0e0e0;
+    border: 1px solid rgb(225 29 72 / 18%);
     border-radius: 9999px;
     background: white;
     color: var(--color-text);
@@ -243,9 +442,10 @@ h1 {
 }
 
 .tag-selected-tags__item {
-    padding: 0;
-    border: 0;
-    background: transparent;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid rgb(0 124 145 / 18%);
+    border-radius: 9999px;
+    background: rgb(0 124 145 / 8%);
     color: var(--color-accent);
     cursor: pointer;
     font: inherit;
@@ -269,6 +469,21 @@ h1 {
     background: white;
     box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
     white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    main {
+        width: min(100% - 1rem, 880px);
+        margin: 1.5rem auto;
+    }
+
+    .search-form {
+        flex-direction: column;
+    }
+
+    .post {
+        padding: 0.9rem;
+    }
 }
 
 .tag-selected-tags__popover::before {
