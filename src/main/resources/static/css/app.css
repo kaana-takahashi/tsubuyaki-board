@@ -77,11 +77,33 @@ h1 {
 }
 
 .post {
+    position: relative;
     padding: 1rem;
     border: 1px solid var(--color-border);
     border-radius: 8px;
     margin-bottom: 0.75rem;
     background: white;
+}
+
+.post--linkable {
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+}
+
+.post--linkable:hover {
+    box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+}
+
+.post__detail-link {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: inherit;
+}
+
+.post__detail-link:focus-visible {
+    outline: 3px solid rgb(29 78 216 / 35%);
+    outline-offset: 2px;
 }
 
 .post__author {
@@ -127,6 +149,11 @@ h1 {
     flex-wrap: wrap;
     gap: 0.4rem;
     margin-top: 0.5rem;
+}
+
+.post--linkable .post__tags {
+    position: relative;
+    z-index: 2;
 }
 
 .post__tags a {

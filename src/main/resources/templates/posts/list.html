@@ -31,17 +31,22 @@
 
     <section>
         <p th:if="${#lists.isEmpty(posts)}">まだ投稿はありません</p>
-        <article class="post" th:each="post : ${posts}">
+        <article class="post post--linkable" th:each="post : ${posts}">
+            <a class="post__detail-link"
+               th:href="@{/posts/{id}(id=${post.id})}"
+               th:attr="aria-label=|${post.author} の投稿詳細を表示|"></a>
             <div class="post__author">
                 <span class="post__avatar" th:style="'background-color: ' + ${post.avatarColor}" th:text="${#strings.toUpperCase(#strings.substring(post.author, 0, 1))}">A</span>
                 <span class="post__author-name" th:text="${post.author}">投稿者</span>
             </div>
             <p class="post__body" th:text="${post.body}">本文</p>
+            <div class="post__tags" th:if="${!#lists.isEmpty(post.tags)}">
+                <a th:each="tag : ${post.tags}" th:href="@{/tags/{name}(name=${tag.name})}" th:text="|#${tag.name}|">#tag</a>
+            </div>
             <div class="post__meta">
                 <time class="post__created-at"
                       th:datetime="${post.createdAt}"
                       th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-23 09:00</time>
-                <a th:href="@{/posts/{id}(id=${post.id})}">詳細</a>
             </div>
         </article>
     </section>
