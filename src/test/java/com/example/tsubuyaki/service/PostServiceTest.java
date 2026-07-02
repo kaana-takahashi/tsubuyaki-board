@@ -53,38 +53,39 @@ class PostServiceTest {
     @DisplayName("投稿一覧_latest_Repositoryの新着50件を返す")
     void 投稿一覧_latest_Repositoryの新着50件を返す() {
         List<Post> expected = List.of(new Post("alice", "hello", Instant.parse("2026-05-23T10:00:00Z")));
-        given(postRepository.findTop50ByOrderByCreatedAtDesc()).willReturn(expected);
+        given(postRepository.findTop50ByDeletedAtIsNullOrderByCreatedAtDesc()).willReturn(expected);
 
         List<Post> posts = postService.latest();
 
         assertThat(posts).isEqualTo(expected);
-        verify(postRepository).findTop50ByOrderByCreatedAtDesc();
+        verify(postRepository).findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
     }
 
     @Test
     @DisplayName("投稿検索_qあり_本文検索Repositoryを呼び結果を返す")
     void 投稿検索_qあり_本文検索Repositoryを呼び結果を返す() {
         List<Post> expected = List.of(new Post("alice", "hello world", Instant.parse("2026-05-23T10:00:00Z")));
-        given(postRepository.findTop50ByBodyContainingOrderByCreatedAtDesc("hello")).willReturn(expected);
+        given(postRepository.findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc("hello"))
+                .willReturn(expected);
 
         List<Post> posts = postService.list("hello");
 
         assertThat(posts).isEqualTo(expected);
-        verify(postRepository).findTop50ByBodyContainingOrderByCreatedAtDesc("hello");
-        verify(postRepository, never()).findTop50ByOrderByCreatedAtDesc();
+        verify(postRepository).findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc("hello");
+        verify(postRepository, never()).findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
     }
 
     @Test
     @DisplayName("投稿検索_q空白_latestを返す")
     void 投稿検索_q空白_latestを返す() {
         List<Post> expected = List.of(new Post("alice", "hello", Instant.parse("2026-05-23T10:00:00Z")));
-        given(postRepository.findTop50ByOrderByCreatedAtDesc()).willReturn(expected);
+        given(postRepository.findTop50ByDeletedAtIsNullOrderByCreatedAtDesc()).willReturn(expected);
 
         List<Post> posts = postService.list("   ");
 
         assertThat(posts).isEqualTo(expected);
-        verify(postRepository).findTop50ByOrderByCreatedAtDesc();
-        verify(postRepository, never()).findTop50ByBodyContainingOrderByCreatedAtDesc("   ");
+        verify(postRepository).findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
+        verify(postRepository, never()).findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc("   ");
     }
 
     @Test
@@ -480,5 +481,34 @@ class PostServiceTest {
 
         assertThat(likeCount).isEqualTo(3);
         verify(postLikeRepository).countByPostId(1L);
+    }
+
+    @Test
+    @DisplayName("投稿削除_deletePost_存在する投稿を論理削除する")
+    void 投稿削除_deletePost_存在する投稿を論理削除する() {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:00:00Z"));
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+        Instant before = Instant.now();
+
+        postService.deletePost(1L);
+
+        Instant after = Instant.now();
+        assertThat(post.getDeletedAt()).isBetween(before, after);
+        verify(postRepository).findById(1L);
+        verify(postRepository, never()).delete(post);
+        verify(postRepository, never()).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("投稿削除_deletePost_存在しない投稿id_404相当の例外にする")
+    void 投稿削除_deletePost_存在しない投稿id_404相当の例外にする() {
+        given(postRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> postService.deletePost(999L))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+
+        verify(postRepository).findById(999L);
+        verify(postRepository, never()).deleteById(999L);
     }
 }

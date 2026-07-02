@@ -75,6 +75,16 @@ class PostControllerTest {
     }
 
     @Test
+    @DisplayName("投稿一覧_宮崎テーマの共通レイアウトを適用する")
+    void 投稿一覧_宮崎テーマの共通レイアウトを適用する() throws Exception {
+        given(postService.latest()).willReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<body class=\"miyazaki-shell\">")));
+    }
+
+    @Test
     @DisplayName("投稿一覧_qあり_検索結果をposts_listへ渡す")
     void 投稿一覧_qあり_検索結果をpostsListへ渡す() throws Exception {
         Post post = new Post("alice", "hello world", Instant.parse("2026-05-23T10:15:00Z"));
@@ -315,12 +325,13 @@ class PostControllerTest {
 
         mockMvc.perform(get("/posts"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(matchesPattern("(?s).*<article class=\"post\">\\s*"
-                        + "<div class=\"post__author\">.*</div>\\s*"
+                .andExpect(content().string(matchesPattern("(?s).*<article class=\"post post--linkable\">\\s*"
+                        + "<a class=\"post__detail-link\"\\s+href=\"/posts/1\""
+                        + " aria-label=\"alice の投稿詳細を表示\"></a>\\s*"
+                        + ".*<div class=\"post__author\">.*</div>\\s*"
                         + "<p class=\"post__body\">長い本文でも読みやすく折り返して表示する投稿です。</p>\\s*"
                         + "<div class=\"post__meta\">\\s*"
-                        + "<time class=\"post__created-at\".*>2026-05-23 19:15</time>\\s*"
-                        + "<a href=\"/posts/1\">詳細</a>\\s*</div>.*")));
+                        + "<time class=\"post__created-at\".*>2026-05-23 19:15</time>\\s*</div>.*")));
     }
 
     @Test
@@ -338,16 +349,93 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("投稿一覧_投稿あり_各投稿に詳細リンクを表示する")
-    void 投稿一覧_投稿あり_各投稿に詳細リンクを表示する() throws Exception {
+    @DisplayName("投稿一覧_投稿あり_投稿カード全体が詳細リンクになる")
+    void 投稿一覧_投稿あり_投稿カード全体が詳細リンクになる() throws Exception {
         Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
         ReflectionTestUtils.setField(post, "id", 1L);
         given(postService.latest()).willReturn(List.of(post));
 
         mockMvc.perform(get("/posts"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(matchesPattern("(?s).*<article class=\"post\">.*"
-                        + "<a[^>]+href=\"/posts/1\"[^>]*>詳細</a>.*</article>.*")));
+                .andExpect(content().string(matchesPattern("(?s).*<article class=\"post post--linkable\">\\s*"
+                        + "<a class=\"post__detail-link\"\\s+href=\"/posts/1\""
+                        + " aria-label=\"alice の投稿詳細を表示\"></a>.*</article>.*")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString(">詳細</a>"))));
+    }
+
+    @Test
+    @DisplayName("投稿一覧_タグあり_タグリンクを本文の下かつ投稿日上に表示する")
+    void 投稿一覧_タグあり_タグリンクを本文の下かつ投稿日上に表示する() throws Exception {
+        Post post = new Post("alice", "hello #spring", Instant.parse("2026-05-23T10:15:00Z"));
+        post.addTag(new Tag("spring"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.latest()).willReturn(List.of(post));
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(matchesPattern("(?s).*<p class=\"post__body\">hello #spring</p>\\s*"
+                        + "<div class=\"post__tags\">\\s*"
+                        + "<a[^>]+href=\"/tags/spring\"[^>]*>#spring</a>\\s*</div>\\s*"
+                        + "<div class=\"post__meta\">\\s*"
+                        + "<time class=\"post__created-at\".*>2026-05-23 19:15</time>.*")));
+    }
+
+    @Test
+    @DisplayName("投稿一覧_タグなし_タグリンク領域を表示しない")
+    void 投稿一覧_タグなし_タグリンク領域を表示しない() throws Exception {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.latest()).willReturn(List.of(post));
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("post__tags"))));
+    }
+
+    @Test
+    @DisplayName("投稿一覧_投稿あり_三点メニューと削除フォームを表示する")
+    void 投稿一覧_投稿あり_三点メニューと削除フォームを表示する() throws Exception {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.latest()).willReturn(List.of(post));
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(matchesPattern("(?s).*<div class=\"post__actions\">\\s*"
+                        + "<button class=\"post__menu-button\"\\s+type=\"button\""
+                        + "\\s+aria-label=\"投稿メニューを開く\"\\s+aria-haspopup=\"true\""
+                        + "\\s+aria-expanded=\"false\">"
+                        + ".*</button>\\s*"
+                        + "<div class=\"post__menu\" hidden(?:=\"hidden\")?>\\s*"
+                        + "<form class=\"post__delete-form\" action=\"/posts/1/delete\" method=\"post\">.*"
+                        + "<button class=\"post__delete-button\" type=\"submit\">削除</button>\\s*"
+                        + "</form>\\s*</div>\\s*</div>.*")));
+    }
+
+    @Test
+    @DisplayName("投稿一覧_投稿あり_三点メニュー追加後も投稿カード全体リンクを維持する")
+    void 投稿一覧_投稿あり_三点メニュー追加後も投稿カード全体リンクを維持する() throws Exception {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.latest()).willReturn(List.of(post));
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("class=\"post__detail-link\"")))
+                .andExpect(content().string(containsString("href=\"/posts/1\"")));
+    }
+
+    @Test
+    @DisplayName("投稿一覧_投稿あり_三点メニュー開閉スクリプトを読み込む")
+    void 投稿一覧_投稿あり_三点メニュー開閉スクリプトを読み込む() throws Exception {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.latest()).willReturn(List.of(post));
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(matchesPattern("(?s).*<script[^>]+src=\"/js/post-menu.js\""
+                        + "[^>]+defer(?:=\"defer\")?[^>]*></script>.*")));
     }
 
     @Test
@@ -367,6 +455,18 @@ class PostControllerTest {
                         + "<div class=\"post__author\">.*</div>\\s*"
                         + "<p class=\"post__body\">hello</p>\\s*"
                         + ".*<time class=\"post__created-at\".*>2026-05-23 19:15</time>.*")));
+    }
+
+    @Test
+    @DisplayName("投稿詳細_宮崎テーマの共通レイアウトを適用する")
+    void 投稿詳細_宮崎テーマの共通レイアウトを適用する() throws Exception {
+        Post post = new Post("alice", "hello", Instant.parse("2026-05-23T10:15:00Z"));
+        ReflectionTestUtils.setField(post, "id", 1L);
+        given(postService.findById(1L)).willReturn(Optional.of(post));
+
+        mockMvc.perform(get("/posts/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<body class=\"miyazaki-shell\">")));
     }
 
     @Test
@@ -475,6 +575,14 @@ class PostControllerTest {
                 .andExpect(model().attribute("postForm", instanceOf(PostForm.class)));
 
         verifyNoInteractions(postService);
+    }
+
+    @Test
+    @DisplayName("投稿作成フォーム_宮崎テーマの共通レイアウトを適用する")
+    void 投稿作成フォーム_宮崎テーマの共通レイアウトを適用する() throws Exception {
+        mockMvc.perform(get("/posts/new"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<body class=\"miyazaki-shell\">")));
     }
 
     @Test
@@ -681,5 +789,25 @@ class PostControllerTest {
                 .andExpect(redirectedUrl("/posts/1"));
 
         then(postService).should(times(2)).toggleLike(1L, "c44b2068");
+    }
+
+    @Test
+    @DisplayName("投稿削除_POST_posts_id_delete_Serviceで削除し一覧へリダイレクトする")
+    void 投稿削除_PostPostsIdDelete_Serviceで削除し一覧へリダイレクトする() throws Exception {
+        mockMvc.perform(post("/posts/1/delete"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/posts"));
+
+        then(postService).should().deletePost(1L);
+    }
+
+    @Test
+    @DisplayName("投稿削除_POST_posts_id_delete_存在しないid_404を返す")
+    void 投稿削除_PostPostsIdDelete_存在しないid_404を返す() throws Exception {
+        org.mockito.BDDMockito.willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+                .given(postService).deletePost(999L);
+
+        mockMvc.perform(post("/posts/999/delete"))
+                .andExpect(status().isNotFound());
     }
 }

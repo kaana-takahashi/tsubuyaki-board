@@ -30,7 +30,7 @@ class PostRepositoryTest {
                 .mapToObj(index -> new Post("user" + index, "body" + index, base.plusSeconds(index)))
                 .forEach(postRepository::save);
 
-        List<Post> posts = postRepository.findTop50ByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
 
         assertThat(posts).hasSize(50);
         assertThat(posts).extracting(Post::getBody)
@@ -47,12 +47,40 @@ class PostRepositoryTest {
                 .forEach(postRepository::save);
         postRepository.save(new Post("needle-user", "検索対象外の本文", base.plusSeconds(100)));
 
-        List<Post> posts = postRepository.findTop50ByBodyContainingOrderByCreatedAtDesc("needle");
+        List<Post> posts = postRepository.findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc("needle");
 
         assertThat(posts).hasSize(50);
         assertThat(posts).extracting(Post::getBody)
                 .startsWith("needle body52", "needle body51", "needle body50")
                 .doesNotContain("needle body1", "検索対象外の本文");
+    }
+
+    @Test
+    @DisplayName("投稿一覧_削除済み投稿_一覧に含めない")
+    void 投稿一覧_削除済み投稿_一覧に含めない() {
+        Instant base = Instant.parse("2026-05-23T00:00:00Z");
+        Post visible = postRepository.save(new Post("alice", "visible", base.plusSeconds(1)));
+        Post deleted = new Post("bob", "deleted", base.plusSeconds(2));
+        deleted.delete(base.plusSeconds(3));
+        postRepository.save(deleted);
+
+        List<Post> posts = postRepository.findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
+
+        assertThat(posts).containsExactly(visible);
+    }
+
+    @Test
+    @DisplayName("投稿検索_削除済み投稿_本文に一致しても含めない")
+    void 投稿検索_削除済み投稿_本文に一致しても含めない() {
+        Instant base = Instant.parse("2026-05-23T00:00:00Z");
+        Post visible = postRepository.save(new Post("alice", "needle visible", base.plusSeconds(1)));
+        Post deleted = new Post("bob", "needle deleted", base.plusSeconds(2));
+        deleted.delete(base.plusSeconds(3));
+        postRepository.save(deleted);
+
+        List<Post> posts = postRepository.findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc("needle");
+
+        assertThat(posts).containsExactly(visible);
     }
 
     @Test

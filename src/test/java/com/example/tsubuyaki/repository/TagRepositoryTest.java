@@ -131,6 +131,23 @@ class TagRepositoryTest {
     }
 
     @Test
+    @DisplayName("タグ別一覧_latest_削除済み投稿を含めない")
+    void タグ別一覧_latest_削除済み投稿を含めない() {
+        Tag tag = tagRepository.save(new Tag("研修"));
+        Instant base = Instant.parse("2026-05-23T00:00:00Z");
+        Post visible = taggedPost("visible", base.plusSeconds(1), tag);
+        Post deleted = taggedPost("deleted", base.plusSeconds(2), tag);
+        deleted.delete(base.plusSeconds(3));
+        postRepository.saveAndFlush(deleted);
+
+        List<PostTag> postTags = postTagRepository.findTop50ByTagNameOrderByPostCreatedAtDesc("研修",
+                org.springframework.data.domain.PageRequest.of(0, 50));
+
+        assertThat(postTags).extracting(PostTag::getPost)
+                .containsExactly(visible);
+    }
+
+    @Test
     @DisplayName("タグ別一覧_popular_いいね数降順で返す")
     void タグ別一覧_popular_いいね数降順で返す() {
         Tag tag = tagRepository.save(new Tag("研修"));
@@ -208,6 +225,27 @@ class TagRepositoryTest {
         entityManager.clear();
 
         assertThat(postTags.getFirst().getPost().getAvatarColor()).isEqualTo("#e91e63");
+    }
+
+    @Test
+    @DisplayName("タグ別一覧_popular_削除済み投稿を含めない")
+    void タグ別一覧_popular_削除済み投稿を含めない() {
+        Tag tag = tagRepository.save(new Tag("研修"));
+        Instant base = Instant.parse("2026-05-23T00:00:00Z");
+        Post visible = taggedPost("visible", base.plusSeconds(1), tag);
+        Post deleted = taggedPost("deleted", base.plusSeconds(2), tag);
+        deleted.delete(base.plusSeconds(3));
+        postRepository.save(deleted);
+        like(visible, "client01");
+        like(deleted, "client02");
+        like(deleted, "client03");
+        postTagRepository.flush();
+
+        List<PostTag> postTags = postTagRepository.findByTagNameOrderByLikeCountDescCreatedAtDesc("研修",
+                org.springframework.data.domain.PageRequest.of(0, 50));
+
+        assertThat(postTags).extracting(PostTag::getPost)
+                .containsExactly(visible);
     }
 
     private Post taggedPost(String body, Instant createdAt, Tag tag) {
