@@ -38,6 +38,9 @@ public class Post {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @OneToMany(mappedBy = "post", fetch = FetchType.EAGER)
     private List<PostTag> postTags = new ArrayList<>();
 
@@ -74,6 +77,16 @@ public class Post {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void delete(Instant deletedAt) {
+        if (this.deletedAt == null) {
+            this.deletedAt = deletedAt;
+        }
     }
 
     public List<Tag> getTags() {

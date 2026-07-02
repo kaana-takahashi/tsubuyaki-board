@@ -102,6 +102,12 @@ public class PostController {
         return "redirect:/posts/" + id;
     }
 
+    @PostMapping("/posts/{id}/delete")
+    public String delete(@PathVariable Long id) {
+        postService.deletePost(id);
+        return "redirect:/posts";
+    }
+
     public record TagResponse(String name) {
     }
 

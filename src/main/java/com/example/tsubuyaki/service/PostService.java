@@ -46,14 +46,14 @@ public class PostService {
     }
 
     public List<Post> latest() {
-        return repository.findTop50ByOrderByCreatedAtDesc();
+        return repository.findTop50ByDeletedAtIsNullOrderByCreatedAtDesc();
     }
 
     public List<Post> list(String q) {
         if (q == null || q.trim().isEmpty()) {
             return latest();
         }
-        return repository.findTop50ByBodyContainingOrderByCreatedAtDesc(q);
+        return repository.findTop50ByBodyContainingAndDeletedAtIsNullOrderByCreatedAtDesc(q);
     }
 
     public Optional<Post> findById(Long id) {
@@ -127,6 +127,13 @@ public class PostService {
 
     public long countLikes(Long postId) {
         return postLikeRepository.countByPostId(postId);
+    }
+
+    @Transactional
+    public void deletePost(Long postId) {
+        Post post = repository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        post.delete(Instant.now());
     }
 
     private String normalizeAvatarColor(String avatarColor) {

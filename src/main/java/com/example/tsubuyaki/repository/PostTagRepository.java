@@ -15,6 +15,7 @@ public interface PostTagRepository extends JpaRepository<PostTag, Long> {
             FROM PostTag pt
             JOIN FETCH pt.post p
             WHERE pt.tag.name = :name
+            AND p.deletedAt IS NULL
             ORDER BY p.createdAt DESC
             """)
     List<PostTag> findTop50ByTagNameOrderByPostCreatedAtDesc(@Param("name") String name, Pageable pageable);
@@ -24,6 +25,7 @@ public interface PostTagRepository extends JpaRepository<PostTag, Long> {
             FROM PostTag pt
             JOIN FETCH pt.post p
             WHERE pt.tag.name = :name
+            AND p.deletedAt IS NULL
             ORDER BY (
                 SELECT COUNT(pl.id)
                 FROM PostLike pl
